@@ -1,0 +1,82 @@
+/*
+  FILTERSCRIPT > ANTI PROXY/VPN
+  CREDITS: LYNCH Y
+*/
+#define FILTERSCRIPT
+
+#include <a_samp>
+#include <a_http>
+#include <foreach>
+#if defined FILTERSCRIPT
+
+public OnFilterScriptInit()
+{
+	print("--------------------------------------");
+	print("[>] Anti VPN: ON");
+	print("[>] Filterscript by Lynch Y");
+	print("--------------------------------------");
+	return 1;
+}
+
+public OnFilterScriptExit()
+{
+	return 1;
+}
+
+forward MyHttpResponse(playerid, response_code, data[]);
+
+public OnPlayerConnect(playerid)
+{
+	new ip[16], string[59];
+	GetPlayerIp(playerid, ip, sizeof ip);
+	format(string, sizeof string, "www.shroomery.org/ythan/proxycheck.php?ip=%s", ip);
+	HTTP(playerid, HTTP_GET, string, "", "MyHttpResponse");
+    return 1;
+}
+
+public MyHttpResponse(playerid, response_code, data[])
+{
+	new ime[MAX_PLAYERS], string[512];
+	new ip[16];
+	GetPlayerName(playerid, ime, sizeof(ime));
+	GetPlayerIp(playerid, ip, sizeof ip);
+	if(strcmp(ip, "127.0.0.1", true) == 0)
+	{
+		format(string, 256, "{0074c2}#LOCALHOST: {FFFFFF}Igrac {0074c2}%s [%d] {FFFFFF}je usao na server !", ime, playerid);
+	    SendClientMessageToAll(-1, string);
+        return 1;
+	}
+	if(response_code == 200)
+	{
+		if(data[0] == 'Y')
+		{
+			format(string, 512, "{F81414}[KICK]: {FFFFFF}Igrac {0074c2}%s [%d] {FFFFFF}je kikovan zbog Proxy/VPN !", ime, playerid);
+	    	SendClientMessageToAll(-1, string);
+	    	SendClientMessage(playerid, 0xFF0000FF, "Molimo vas ugasite vas Proxy/VPN i ponovo udjite.");
+	    	SetTimerEx("KikujIgraca", 100, false, "i", playerid);
+		}
+		if(data[0] == 'N')
+		{
+			format(string, 512, "{0074c2}[KICK]: {FFFFFF}Igracu {0074c2}%s [%d] {FFFFFF}nije detektovan Proxy/VPN !", ime, playerid);
+	    	SendClientMessageToAll(-1, string);
+		}
+		if(data[0] == 'X')
+		{
+			printf("Pogresan IP Format !");
+		}
+		else
+		{
+			printf("Zahtev nije uspeo ! Kod je bio: %d", response_code);
+		}
+	}
+	return 1;
+}
+
+forward KikujIgraca(playerid);
+public KikujIgraca(playerid)
+{
+    Kick(playerid);
+    return 1;
+}
+
+#endif
